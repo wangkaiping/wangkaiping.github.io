@@ -557,7 +557,7 @@ body {
   margin-top: 15px;
 }
 #header-title {
-  color: #fff;
+  color: #4094c7;
   letter-spacing: 2px;
 }
 #header-title h2 {
@@ -2055,7 +2055,7 @@ pre .javascript .function {
     top: 0;
     right: 0;
     height: 100%;
-    background: rgba(0,0,0,0.17);
+    background: rgba(82,82,82,0.8);
     color: #fff;
     cursor: default;
     z-index: 1;
