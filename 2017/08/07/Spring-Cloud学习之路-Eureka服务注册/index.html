@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Spring-Cloud学习之路-Eureka服务注册 | Jedi&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+    <meta name="keywords" content="Jedi,Jedi's blog" />
+  
+  <meta name="description" content="本博客是基于Dalston.SR2版本编写，理解有不对的地方希望读者指出，留言评论，一起学习了解。 参考文章：【Spring Cloud源码分析（一）Eureka 】及【深入理解Eureka之源码解析】 我们将一个普通的Spring-Boot应用注册到Eureka Servcer或者从Eureka Server中获取服务列表时，主要做了以下两件事：  在应用主类中配置了@EnableDiscove">
+<meta name="keywords" content="Spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-Cloud学习之路-Eureka服务注册">
+<meta property="og:url" content="http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/index.html">
+<meta property="og:site_name" content="Jedi&#39;s Blog">
+<meta property="og:description" content="本博客是基于Dalston.SR2版本编写，理解有不对的地方希望读者指出，留言评论，一起学习了解。 参考文章：【Spring Cloud源码分析（一）Eureka 】及【深入理解Eureka之源码解析】 我们将一个普通的Spring-Boot应用注册到Eureka Servcer或者从Eureka Server中获取服务列表时，主要做了以下两件事：  在应用主类中配置了@EnableDiscove">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://img.blog.csdn.net/20170809133330319?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMTg5NzY5OTk=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:image" content="http://img.blog.csdn.net/20170809165346739?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMTg5NzY5OTk=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:updated_time" content="2017-11-04T07:21:58.446Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring-Cloud学习之路-Eureka服务注册">
+<meta name="twitter:description" content="本博客是基于Dalston.SR2版本编写，理解有不对的地方希望读者指出，留言评论，一起学习了解。 参考文章：【Spring Cloud源码分析（一）Eureka 】及【深入理解Eureka之源码解析】 我们将一个普通的Spring-Boot应用注册到Eureka Servcer或者从Eureka Server中获取服务列表时，主要做了以下两件事：  在应用主类中配置了@EnableDiscove">
+<meta name="twitter:image" content="http://img.blog.csdn.net/20170809133330319?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMTg5NzY5OTk=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+  
+  
+    <link rel="icon" href="/favicon.ico">
+  
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/pace.min.js"></script>
+  
+
+  
+  
+
+</head>
+
+<body>
+  <div id="container">
+      <header id="header">
+    <div id="banner"></div>
+    <div id="header-outer">
+        <div id="header-menu" class="header-menu-pos animated">
+            <div class="header-menu-container">
+                <a href="/" class="left">
+                    <span class="site-title">程序猿Jedi</span>
+                </a>
+                <nav id="header-menu-nav" class="right">
+                    
+                    <a  href="/">
+                        <i class="fa fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    
+                    <a  href="/archives">
+                        <i class="fa fa-archive"></i>
+                        <span>Archives</span>
+                    </a>
+                    
+                    <a  href="/about">
+                        <i class="fa fa-user"></i>
+                        <span>About</span>
+                    </a>
+                    
+                </nav>
+                <a class="mobile-header-menu-button">
+                    <i class="fa fa-bars"></i>
+                </a>
+            </div>
+        </div>
+        <div id="header-row">
+            <div id="logo">
+                <a href="/">
+                    <img src="/images/logo.png" alt="logo">
+                </a>
+            </div>
+            <div class="header-info">
+                <div id="header-title">
+                    
+                    <h2>
+                        程序猿Jedi
+                    </h2>
+                    
+                </div>
+                <div id="header-description">
+                    
+                    <h3>
+                        一个专注 Java 开发的技术博客
+                    </h3>
+                    
+                </div>
+            </div>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a title="Email" target="_blank" href="//mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=1b_wsbz7orS7spWkpPu2urg">
+                            <i class="fa fa-envelope fa-2x"></i></a>
+                    
+                        <a title="Github" target="_blank" href="//github.com/wangkaiping">
+                            <i class="fa fa-github fa-2x"></i></a>
+                    
+                        <a title="Weibo" target="_blank" href="//weibo.com/wanglxh">
+                            <i class="fa fa-weibo fa-2x"></i></a>
+                    
+                        <a title="QQ" target="_blank" href="//wpa.qq.com/msgrd?v=3&uin=1015010708&site=qq&menu=yes">
+                            <i class="fa fa-qq fa-2x"></i></a>
+                    
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+      <div class="outer">
+        <section id="main" class="body-wrap"><article id="post-Spring-Cloud学习之路-Eureka服务注册" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="post-title" itemprop="name">
+      Spring-Cloud学习之路-Eureka服务注册
+    </h1>
+    <div class="post-title-bar">
+      <ul>
+          
+              <li>
+                  <i class="fa fa-book"></i>
+                  
+                      <a href="/categories/Spring-Cloud/">Spring-Cloud</a>
+                  
+              </li>
+          
+        <li>
+          <i class="fa fa-calendar"></i>  2017-08-07
+        </li>
+        <li>
+          <i class="fa fa-eye"></i>
+          <span id="busuanzi_value_page_pv"></span>
+        </li>
+      </ul>
+    </div>
+  
+
+          
+      </header>
+    
+    <div class="article-entry post-content" itemprop="articleBody">
+      
+            
+            <p>本博客是基于Dalston.SR2版本编写，理解有不对的地方希望读者指出，留言评论，一起学习了解。</p>
+<p>参考文章：【<a href="http://blog.didispace.com/springcloud-sourcecode-eureka/" target="_blank" rel="external">Spring Cloud源码分析（一）Eureka</a> 】及【<a href="http://blog.csdn.net/forezp/article/details/73017664" target="_blank" rel="external">深入理解Eureka之源码解析</a>】</p>
+<p>我们将一个普通的Spring-Boot应用注册到Eureka Servcer或者从Eureka Server中获取服务列表时，主要做了以下两件事：</p>
+<ol>
+<li><p>在应用主类中配置了@EnableDiscoveryClient</p>
+</li>
+<li><p>在application.properties中用eureka.client.service-url.defaultZone参数指定了服务注册中心的位置</p>
+</li>
+</ol>
+<p>首先我们来看看@EnableDiscoveryClient的源码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Annotation to enable a DiscoveryClient implementation.</div><div class="line"> * @author Spencer Gibb</div><div class="line"> */</div><div class="line">@Target(ElementType.TYPE)</div><div class="line">@Retention(RetentionPolicy.RUNTIME)</div><div class="line">@Documented</div><div class="line">@Inherited</div><div class="line">@Import(EnableDiscoveryClientImportSelector.class)</div><div class="line">public @interface EnableDiscoveryClient &#123;</div><div class="line"></div><div class="line">	/**</div><div class="line">	 * If true, the ServiceRegistry will automatically register the local server.</div><div class="line">	 */</div><div class="line">	boolean autoRegister() default true;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>注释解释：<br>@Target:指定程序元定义的注释所使用的地方，它使用了另一个类：ElementType，是一个枚举类定义了注释类型可以应用到不同的程序元素以免使用者误用<br>ElementType是一个枚举类型，指明注释可以使用的地方，看看ElementType类： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">public enum ElementType &#123;  </div><div class="line">     TYPE, // 指定适用点为 class, interface, enum  </div><div class="line">     FIELD, // 指定适用点为 field  </div><div class="line">     METHOD, // 指定适用点为 method  </div><div class="line">     PARAMETER, // 指定适用点为 method 的 parameter  </div><div class="line">     CONSTRUCTOR, // 指定适用点为 constructor  </div><div class="line">     LOCAL_VARIABLE, // 指定使用点为 局部变量  </div><div class="line">     ANNOTATION_TYPE, //指定适用点为 annotation 类型  </div><div class="line">     PACKAGE // 指定适用点为 package  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p> @Retention：这个元注释和java编译器处理注释的注释类型方式相关，告诉编译器在处理自定义注释类型的几种不同的选择，需要使用RetentionPolicy枚举类<br>枚举类只有一个成员变量，可以不用指明成名名称而赋值，看Retention的源代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">@Documented</div><div class="line">@Retention(RetentionPolicy.RUNTIME)</div><div class="line">@Target(ElementType.ANNOTATION_TYPE)</div><div class="line">public @interface Retention &#123;</div><div class="line">    RetentionPolicy value();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>类中有个RetentionPolicy类，也是一个枚举类，具体看代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">public enum RetentionPolicy &#123;  </div><div class="line">     SOURCE, // 编译器处理完Annotation后不存储在class中  </div><div class="line">     CLASS, // 编译器把Annotation存储在class中，这是默认值  </div><div class="line">     RUNTIME // 编译器把Annotation存储在class中，可以由虚拟机读取,反射需要  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>@Documented：是一个标记注释，表示注释应该出现在类的javadoc中，因为在默认情况下注释时不包括在javadoc中的。<br>注意他与@Retention(RetentionPolicy.RUNTIME)配合使用，因为只有将注释保留在编译后的类文件中由虚拟机加载， 然后javadoc才能将其抽取出来添加至javadoc中。</p>
+<p>@Inherited：将注释同样继承至使用了该注释类型的方法中（表达有点问题，就是如果一个方法使用了的注释用了@inherited， 那么其子类的该方法同样继承了该注释） </p>
+<p>由此EnableDiscoveryClient注释，我们可以看出，它主要用来开启DiscoveryClient的实例。我们搜索DiscoveryClient可以发现有一个类与一个接口。在com.netflix.discovery包下的DiscoveryClient类，该类包含了Eureka Client向Eureka Server的相关方法。其中DiscoveryClient实现了EurekaClient接口，并且它是一个单例模式，而EurekaClient继承了LookupService接口。它们之间的关系如图所示。<br><img src="http://img.blog.csdn.net/20170809133330319?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMTg5NzY5OTk=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>继续看源码，在DiscoveryClient类中，我们看到有一个register()，其源码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Register with the eureka service by making the appropriate REST call.</div><div class="line"> */</div><div class="line">boolean register() throws Throwable &#123;</div><div class="line">    logger.info(PREFIX + appPathIdentifier + &quot;: registering service...&quot;);</div><div class="line">    EurekaHttpResponse&lt;Void&gt; httpResponse;</div><div class="line">    try &#123;</div><div class="line">  // Eureka Client客户端，调用Eureka服务端的入口</div><div class="line">        httpResponse = eurekaTransport.registrationClient.register(instanceInfo);</div><div class="line">    &#125; catch (Exception e) &#123;</div><div class="line">        logger.warn(&quot;&#123;&#125; - registration failed &#123;&#125;&quot;, PREFIX + appPathIdentifier, e.getMessage(), e);</div><div class="line">        throw e;</div><div class="line">    &#125;</div><div class="line">    if (logger.isInfoEnabled()) &#123;</div><div class="line">        logger.info(&quot;&#123;&#125; - registration status: &#123;&#125;&quot;, PREFIX + appPathIdentifier, httpResponse.getStatusCode());</div><div class="line">    &#125;</div><div class="line">    return httpResponse.getStatusCode() == 204;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们找到了服务注册的代码，那么我们由此继续追踪它被调用的地方，追踪发现它被com.netflix.discovery.InstanceInfoReplicator 类的run()方法调用，其中InstanceInfoReplicator实现了Runnable接口，run()方法代码如下： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">public void run() &#123;</div><div class="line">        try &#123;</div><div class="line">            discoveryClient.refreshInstanceInfo();</div><div class="line">            Long dirtyTimestamp = instanceInfo.isDirtyWithTime();</div><div class="line">            if (dirtyTimestamp != null) &#123;</div><div class="line">                discoveryClient.register();</div><div class="line">                instanceInfo.unsetIsDirty(dirtyTimestamp);</div><div class="line">            &#125;</div><div class="line">        &#125; catch (Throwable t) &#123;</div><div class="line">            logger.warn(&quot;There was a problem with the instance info replicator&quot;, t);</div><div class="line">        &#125; finally &#123;</div><div class="line">            Future next = scheduler.schedule(this, replicationIntervalSeconds, TimeUnit.SECONDS);</div><div class="line">            scheduledPeriodicRef.set(next);</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>InstanceInfoReplicator类是在DiscoveryClient初始化过程中使用的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div></pre></td><td class="code"><pre><div class="line">@Inject</div><div class="line">DiscoveryClient(ApplicationInfoManager applicationInfoManager, EurekaClientConfig config, AbstractDiscoveryClientOptionalArgs args,</div><div class="line">                Provider&lt;BackupRegistry&gt; backupRegistryProvider) &#123;</div><div class="line">    if (args != null) &#123;</div><div class="line">        this.healthCheckHandlerProvider = args.healthCheckHandlerProvider;</div><div class="line">        this.healthCheckCallbackProvider = args.healthCheckCallbackProvider;</div><div class="line">        this.eventListeners.addAll(args.getEventListeners());</div><div class="line">    &#125; else &#123;</div><div class="line">        this.healthCheckCallbackProvider = null;</div><div class="line">        this.healthCheckHandlerProvider = null;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    this.applicationInfoManager = applicationInfoManager;</div><div class="line">    InstanceInfo myInfo = applicationInfoManager.getInfo();</div><div class="line"></div><div class="line">    clientConfig = config;</div><div class="line">    staticClientConfig = clientConfig;</div><div class="line">    transportConfig = config.getTransportConfig();</div><div class="line">    instanceInfo = myInfo;</div><div class="line">    if (myInfo != null) &#123;</div><div class="line">        appPathIdentifier = instanceInfo.getAppName() + &quot;/&quot; + instanceInfo.getId();</div><div class="line">    &#125; else &#123;</div><div class="line">        logger.warn(&quot;Setting instanceInfo to a passed in null value&quot;);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    this.backupRegistryProvider = backupRegistryProvider;</div><div class="line"></div><div class="line">    this.urlRandomizer = new EndpointUtils.InstanceInfoBasedUrlRandomizer(instanceInfo);</div><div class="line">    localRegionApps.set(new Applications());</div><div class="line"></div><div class="line">    fetchRegistryGeneration = new AtomicLong(0);</div><div class="line"></div><div class="line">    remoteRegionsToFetch = new AtomicReference&lt;String&gt;(clientConfig.fetchRegistryForRemoteRegions());</div><div class="line">    remoteRegionsRef = new AtomicReference&lt;&gt;(remoteRegionsToFetch.get() == null ? null : remoteRegionsToFetch.get().split(&quot;,&quot;));</div><div class="line"></div><div class="line">    if (config.shouldFetchRegistry()) &#123;</div><div class="line">        this.registryStalenessMonitor = new ThresholdLevelsMetric(this, METRIC_REGISTRY_PREFIX + &quot;lastUpdateSec_&quot;, new long[]&#123;15L, 30L, 60L, 120L, 240L, 480L&#125;);</div><div class="line">    &#125; else &#123;</div><div class="line">        this.registryStalenessMonitor = ThresholdLevelsMetric.NO_OP_METRIC;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    if (config.shouldRegisterWithEureka()) &#123;</div><div class="line">        this.heartbeatStalenessMonitor = new ThresholdLevelsMetric(this, METRIC_REGISTRATION_PREFIX + &quot;lastHeartbeatSec_&quot;, new long[]&#123;15L, 30L, 60L, 120L, 240L, 480L&#125;);</div><div class="line">    &#125; else &#123;</div><div class="line">        this.heartbeatStalenessMonitor = ThresholdLevelsMetric.NO_OP_METRIC;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    logger.info(&quot;Initializing Eureka in region &#123;&#125;&quot;, clientConfig.getRegion());</div><div class="line"></div><div class="line">    if (!config.shouldRegisterWithEureka() &amp;&amp; !config.shouldFetchRegistry()) &#123;</div><div class="line">        logger.info(&quot;Client configured to neither register nor query for data.&quot;);</div><div class="line">        scheduler = null;</div><div class="line">        heartbeatExecutor = null;</div><div class="line">        cacheRefreshExecutor = null;</div><div class="line">        eurekaTransport = null;</div><div class="line">        instanceRegionChecker = new InstanceRegionChecker(new PropertyBasedAzToRegionMapper(config), clientConfig.getRegion());</div><div class="line"></div><div class="line">        // This is a bit of hack to allow for existing code using DiscoveryManager.getInstance()</div><div class="line">        // to work with DI&apos;d DiscoveryClient</div><div class="line">        DiscoveryManager.getInstance().setDiscoveryClient(this);</div><div class="line">        DiscoveryManager.getInstance().setEurekaClientConfig(config);</div><div class="line"></div><div class="line">        initTimestampMs = System.currentTimeMillis();</div><div class="line"></div><div class="line">        logger.info(&quot;Discovery Client initialized at timestamp &#123;&#125; with initial instances count: &#123;&#125;&quot;,</div><div class="line">                initTimestampMs, this.getApplications().size());</div><div class="line">        return;  // no need to setup up an network tasks and we are done</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    try &#123;</div><div class="line">        scheduler = Executors.newScheduledThreadPool(3,</div><div class="line">                new ThreadFactoryBuilder()</div><div class="line">                        .setNameFormat(&quot;DiscoveryClient-%d&quot;)</div><div class="line">                        .setDaemon(true)</div><div class="line">                        .build());</div><div class="line"></div><div class="line">        heartbeatExecutor = new ThreadPoolExecutor(</div><div class="line">                1, clientConfig.getHeartbeatExecutorThreadPoolSize(), 0, TimeUnit.SECONDS,</div><div class="line">                new SynchronousQueue&lt;Runnable&gt;(),</div><div class="line">                new ThreadFactoryBuilder()</div><div class="line">                        .setNameFormat(&quot;DiscoveryClient-HeartbeatExecutor-%d&quot;)</div><div class="line">                        .setDaemon(true)</div><div class="line">                        .build()</div><div class="line">        );  // use direct handoff</div><div class="line"></div><div class="line">        cacheRefreshExecutor = new ThreadPoolExecutor(</div><div class="line">                1, clientConfig.getCacheRefreshExecutorThreadPoolSize(), 0, TimeUnit.SECONDS,</div><div class="line">                new SynchronousQueue&lt;Runnable&gt;(),</div><div class="line">                new ThreadFactoryBuilder()</div><div class="line">                        .setNameFormat(&quot;DiscoveryClient-CacheRefreshExecutor-%d&quot;)</div><div class="line">                        .setDaemon(true)</div><div class="line">                        .build()</div><div class="line">        );  // use direct handoff</div><div class="line"></div><div class="line">        eurekaTransport = new EurekaTransport();</div><div class="line">        scheduleServerEndpointTask(eurekaTransport, args);</div><div class="line"></div><div class="line">        AzToRegionMapper azToRegionMapper;</div><div class="line">        if (clientConfig.shouldUseDnsForFetchingServiceUrls()) &#123;</div><div class="line">            azToRegionMapper = new DNSBasedAzToRegionMapper(clientConfig);</div><div class="line">        &#125; else &#123;</div><div class="line">            azToRegionMapper = new PropertyBasedAzToRegionMapper(clientConfig);</div><div class="line">        &#125;</div><div class="line">        if (null != remoteRegionsToFetch.get()) &#123;</div><div class="line">            azToRegionMapper.setRegionsToFetch(remoteRegionsToFetch.get().split(&quot;,&quot;));</div><div class="line">        &#125;</div><div class="line">        instanceRegionChecker = new InstanceRegionChecker(azToRegionMapper, clientConfig.getRegion());</div><div class="line">    &#125; catch (Throwable e) &#123;</div><div class="line">        throw new RuntimeException(&quot;Failed to initialize DiscoveryClient!&quot;, e);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    if (clientConfig.shouldFetchRegistry() &amp;&amp; !fetchRegistry(false)) &#123;</div><div class="line">        fetchRegistryFromBackup();</div><div class="line">    &#125;</div><div class="line">    // 启动的时候初始化的一个定时任务，把本地的服务配置信息，自动刷新到注册服务器上。</div><div class="line">    initScheduledTasks();</div><div class="line">    try &#123;</div><div class="line">        Monitors.registerObject(this);</div><div class="line">    &#125; catch (Throwable e) &#123;</div><div class="line">        logger.warn(&quot;Cannot register timers&quot;, e);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    // This is a bit of hack to allow for existing code using DiscoveryManager.getInstance()</div><div class="line">    // to work with DI&apos;d DiscoveryClient</div><div class="line">    DiscoveryManager.getInstance().setDiscoveryClient(this);</div><div class="line">    DiscoveryManager.getInstance().setEurekaClientConfig(config);</div><div class="line"></div><div class="line">    initTimestampMs = System.currentTimeMillis();</div><div class="line">    logger.info(&quot;Discovery Client initialized at timestamp &#123;&#125; with initial instances count: &#123;&#125;&quot;,</div><div class="line">            initTimestampMs, this.getApplications().size());</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>追踪源码initScheduledTasks():</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Initializes all scheduled tasks.</div><div class="line"> */</div><div class="line">private void initScheduledTasks() &#123;</div><div class="line">    if (clientConfig.shouldFetchRegistry()) &#123;</div><div class="line">        // registry cache refresh timer</div><div class="line">        int registryFetchIntervalSeconds = clientConfig.getRegistryFetchIntervalSeconds();</div><div class="line">        int expBackOffBound = clientConfig.getCacheRefreshExecutorExponentialBackOffBound();</div><div class="line">        // 服务获取</div><div class="line">        scheduler.schedule(</div><div class="line">                new TimedSupervisorTask(</div><div class="line">                        &quot;cacheRefresh&quot;,</div><div class="line">                        scheduler,</div><div class="line">                        cacheRefreshExecutor,</div><div class="line">                        registryFetchIntervalSeconds,</div><div class="line">                        TimeUnit.SECONDS,</div><div class="line">                        expBackOffBound,</div><div class="line">                        new CacheRefreshThread()</div><div class="line">                ),</div><div class="line">                registryFetchIntervalSeconds, TimeUnit.SECONDS);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    if (clientConfig.shouldRegisterWithEureka()) &#123;</div><div class="line">        int renewalIntervalInSecs = instanceInfo.getLeaseInfo().getRenewalIntervalInSecs();</div><div class="line">        int expBackOffBound = clientConfig.getHeartbeatExecutorExponentialBackOffBound();</div><div class="line">        logger.info(&quot;Starting heartbeat executor: &quot; + &quot;renew interval is: &quot; + renewalIntervalInSecs);</div><div class="line"></div><div class="line">        // Heartbeat timer</div><div class="line">        // 服务续约</div><div class="line">        scheduler.schedule(</div><div class="line">                new TimedSupervisorTask(</div><div class="line">                        &quot;heartbeat&quot;,</div><div class="line">                        scheduler,</div><div class="line">                        heartbeatExecutor,</div><div class="line">                        renewalIntervalInSecs,</div><div class="line">                        TimeUnit.SECONDS,</div><div class="line">                        expBackOffBound,</div><div class="line">                        new HeartbeatThread()</div><div class="line">                ),</div><div class="line">                renewalIntervalInSecs, TimeUnit.SECONDS);</div><div class="line"></div><div class="line">        // 服务注册</div><div class="line">        instanceInfoReplicator = new InstanceInfoReplicator(</div><div class="line">                this,</div><div class="line">                instanceInfo,</div><div class="line">                clientConfig.getInstanceInfoReplicationIntervalSeconds(),</div><div class="line">                2); // burstSize</div><div class="line"></div><div class="line">        statusChangeListener = new ApplicationInfoManager.StatusChangeListener() &#123;</div><div class="line">            @Override</div><div class="line">            public String getId() &#123;</div><div class="line">                return &quot;statusChangeListener&quot;;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            @Override</div><div class="line">            public void notify(StatusChangeEvent statusChangeEvent) &#123;</div><div class="line">                if (InstanceStatus.DOWN == statusChangeEvent.getStatus() ||</div><div class="line">                        InstanceStatus.DOWN == statusChangeEvent.getPreviousStatus()) &#123;</div><div class="line">                    // log at warn level if DOWN was involved</div><div class="line">                    logger.warn(&quot;Saw local status change event &#123;&#125;&quot;, statusChangeEvent);</div><div class="line">                &#125; else &#123;</div><div class="line">                    logger.info(&quot;Saw local status change event &#123;&#125;&quot;, statusChangeEvent);</div><div class="line">                &#125;</div><div class="line">                instanceInfoReplicator.onDemandUpdate();</div><div class="line">            &#125;</div><div class="line">        &#125;;</div><div class="line"></div><div class="line">        if (clientConfig.shouldOnDemandUpdateStatusChange()) &#123;</div><div class="line">            applicationInfoManager.registerStatusChangeListener(statusChangeListener);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        instanceInfoReplicator.start(clientConfig.getInitialInstanceInfoReplicationIntervalSeconds());</div><div class="line">    &#125; else &#123;</div><div class="line">        logger.info(&quot;Not registering with Eureka server per configuration&quot;);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该方法主要开启了获取服务注册列表的信息，如果需要向Eureka Server注册，则开启注册，同时开启了定时向Eureka Server服务续约的定时任务。在源码中我们可以发现，“服务获取”任务相对于“服务注册”和“服务续约”任务则更为独立。服务注册”和“服务续约”任务在同一个if语句中，这个是很容易理解的，服务注册到Eureka Server后，自然需要区续约，告诉Eureka Server它还活着，防止被剔除，所以他们会出现在一块儿。</p>
+<p>“服务续约”：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Renew with the eureka service by making the appropriate REST call</div><div class="line"> */</div><div class="line">boolean renew() &#123;</div><div class="line">    EurekaHttpResponse&lt;InstanceInfo&gt; httpResponse;</div><div class="line">    try &#123;</div><div class="line">        httpResponse = eurekaTransport.registrationClient.sendHeartBeat(instanceInfo.getAppName(), instanceInfo.getId(), instanceInfo, null);</div><div class="line">        logger.debug(&quot;&#123;&#125; - Heartbeat status: &#123;&#125;&quot;, PREFIX + appPathIdentifier, httpResponse.getStatusCode());</div><div class="line">        if (httpResponse.getStatusCode() == 404) &#123;</div><div class="line">            REREGISTER_COUNTER.increment();</div><div class="line">            logger.info(&quot;&#123;&#125; - Re-registering apps/&#123;&#125;&quot;, PREFIX + appPathIdentifier, instanceInfo.getAppName());</div><div class="line">            return register();</div><div class="line">        &#125;</div><div class="line">        return httpResponse.getStatusCode() == 200;</div><div class="line">    &#125; catch (Throwable e) &#123;</div><div class="line">        logger.error(&quot;&#123;&#125; - was unable to send heartbeat!&quot;, PREFIX + appPathIdentifier, e);</div><div class="line">        return false;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>继续查看源码，我们可以发现“服务续约”及“服务获取”都是以REST请求的方式实现的，就不多阐述了，有兴趣的朋友可以去看下源码。</p>
+<p>服务注册中心处理</p>
+<p>Eureka Servcer对于各类REST请求的定义都是位于com.netflix.eureka.resources包下<br><img src="http://img.blog.csdn.net/20170809165346739?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcXFfMTg5NzY5OTk=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>Eureka server服务端请求入口<br>ApplicationResource.java文件中，如下所示，可以看出Eureka是通过http post的方式去服务注册</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Registers information about a particular instance for an</div><div class="line"> * &#123;@link com.netflix.discovery.shared.Application&#125;.</div><div class="line"> *</div><div class="line"> * @param info</div><div class="line"> *            &#123;@link InstanceInfo&#125; information of the instance.</div><div class="line"> * @param isReplication</div><div class="line"> *            a header parameter containing information whether this is</div><div class="line"> *            replicated from other nodes.</div><div class="line"> */</div><div class="line">@POST</div><div class="line">@Consumes(&#123;&quot;application/json&quot;, &quot;application/xml&quot;&#125;)</div><div class="line">public Response addInstance(InstanceInfo info,</div><div class="line">                            @HeaderParam(PeerEurekaNode.HEADER_REPLICATION) String isReplication) &#123;</div><div class="line">    logger.debug(&quot;Registering instance &#123;&#125; (replication=&#123;&#125;)&quot;, info.getId(), isReplication);</div><div class="line">    // validate that the instanceinfo contains all the necessary required fields</div><div class="line">    if (isBlank(info.getId())) &#123;</div><div class="line">        return Response.status(400).entity(&quot;Missing instanceId&quot;).build();</div><div class="line">    &#125; else if (isBlank(info.getHostName())) &#123;</div><div class="line">        return Response.status(400).entity(&quot;Missing hostname&quot;).build();</div><div class="line">    &#125; else if (isBlank(info.getAppName())) &#123;</div><div class="line">        return Response.status(400).entity(&quot;Missing appName&quot;).build();</div><div class="line">    &#125; else if (!appName.equals(info.getAppName())) &#123;</div><div class="line">        return Response.status(400).entity(&quot;Mismatched appName, expecting &quot; + appName + &quot; but was &quot; + info.getAppName()).build();</div><div class="line">    &#125; else if (info.getDataCenterInfo() == null) &#123;</div><div class="line">        return Response.status(400).entity(&quot;Missing dataCenterInfo&quot;).build();</div><div class="line">    &#125; else if (info.getDataCenterInfo().getName() == null) &#123;</div><div class="line">        return Response.status(400).entity(&quot;Missing dataCenterInfo Name&quot;).build();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    // handle cases where clients may be registering with bad DataCenterInfo with missing data</div><div class="line">    DataCenterInfo dataCenterInfo = info.getDataCenterInfo();</div><div class="line">    if (dataCenterInfo instanceof UniqueIdentifier) &#123;</div><div class="line">        String dataCenterInfoId = ((UniqueIdentifier) dataCenterInfo).getId();</div><div class="line">        if (isBlank(dataCenterInfoId)) &#123;</div><div class="line">            boolean experimental = &quot;true&quot;.equalsIgnoreCase(serverConfig.getExperimental(&quot;registration.validation.dataCenterInfoId&quot;));</div><div class="line">            if (experimental) &#123;</div><div class="line">                String entity = &quot;DataCenterInfo of type &quot; + dataCenterInfo.getClass() + &quot; must contain a valid id&quot;;</div><div class="line">                return Response.status(400).entity(entity).build();</div><div class="line">            &#125; else if (dataCenterInfo instanceof AmazonInfo) &#123;</div><div class="line">                AmazonInfo amazonInfo = (AmazonInfo) dataCenterInfo;</div><div class="line">                String effectiveId = amazonInfo.get(AmazonInfo.MetaDataKey.instanceId);</div><div class="line">                if (effectiveId == null) &#123;</div><div class="line">                    amazonInfo.getMetadata().put(AmazonInfo.MetaDataKey.instanceId.getName(), info.getId());</div><div class="line">                &#125;</div><div class="line">            &#125; else &#123;</div><div class="line">                logger.warn(&quot;Registering DataCenterInfo of type &#123;&#125; without an appropriate id&quot;, dataCenterInfo.getClass());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    registry.register(info, &quot;true&quot;.equals(isReplication));</div><div class="line">    return Response.status(204).build();  // 204 to be backwards compatible</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在进行很多次校验以后，它会调用com.netflix.eureka.registry.PeerAwareInstanceRegistry的实现类<br>com.netflix.eureka.registry.PeerAwareInstanceRegistryImpl中的public void register(final InstanceInfo info, final boolean isReplication)来进行服务注册</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Registers the information about the &#123;@link InstanceInfo&#125; and replicates</div><div class="line"> * this information to all peer eureka nodes. If this is replication event</div><div class="line"> * from other replica nodes then it is not replicated.</div><div class="line"> *</div><div class="line"> * @param info</div><div class="line"> *            the &#123;@link InstanceInfo&#125; to be registered and replicated.</div><div class="line"> * @param isReplication</div><div class="line"> *            true if this is a replication event from other replica nodes,</div><div class="line"> *            false otherwise.</div><div class="line"> */</div><div class="line">@Override</div><div class="line">public void register(final InstanceInfo info, final boolean isReplication) &#123;</div><div class="line"> // 默认的服务失效时间</div><div class="line">    int leaseDuration = Lease.DEFAULT_DURATION_IN_SECS;</div><div class="line">    if (info.getLeaseInfo() != null &amp;&amp; info.getLeaseInfo().getDurationInSecs() &gt; 0) &#123;</div><div class="line">        leaseDuration = info.getLeaseInfo().getDurationInSecs();</div><div class="line">    &#125;</div><div class="line">    super.register(info, leaseDuration, isReplication);</div><div class="line">    replicateToPeers(Action.Register, info.getAppName(), info.getId(), info, null, isReplication);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在此方法中，我们可以看到它加入了一个服务默认90秒的失效时间，若Eureka Client中没有“服务续约”，那么在90秒后Eureka Service会将此服务剔除，在这里我们可以看到，我们在自定义设置“服务续约”间隔时间时，应该设置为小于服务失效时间。</p>
+<p>其中 super.register(info, leaseDuration, isReplication)方法，点击进去到子类AbstractInstanceRegistry可以发现更多细节，其中注册列表的信息被保存在一个Map中。replicateToPeers()方法，即同步到其他Eureka Server的其他Peers节点，它会遍历循环向所有的Peers注册，最终执行类com.netflix.eureka.cluster.PeerEurekaNode的register()方法，该方法通过执行一个任务向其他节点同步该注册信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * Sends the registration information of &#123;@link InstanceInfo&#125; receiving by</div><div class="line"> * this node to the peer node represented by this class.</div><div class="line"> *</div><div class="line"> * @param info</div><div class="line"> *            the instance information &#123;@link InstanceInfo&#125; of any instance</div><div class="line"> *            that is send to this instance.</div><div class="line"> * @throws Exception</div><div class="line"> */</div><div class="line">public void register(final InstanceInfo info) throws Exception &#123;</div><div class="line">    long expiryTime = System.currentTimeMillis() + getLeaseRenewalOf(info);</div><div class="line">    batchingDispatcher.process(</div><div class="line">            taskId(&quot;register&quot;, info),</div><div class="line">            new InstanceReplicationTask(targetHost, Action.Register, info, null, true) &#123;</div><div class="line">                public EurekaHttpResponse&lt;Void&gt; execute() &#123;</div><div class="line">                    return replicationClient.register(info);</div><div class="line">                &#125;</div><div class="line">            &#125;,</div><div class="line">            expiryTime</div><div class="line">    );</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>刚开始学习Spring-Cloud  如果有什么写的不对的地方，请提出指正。不喜勿喷，谢谢。</p>
+
+            <div class="post-copyright">
+    <div class="content">
+        <p>最后更新： 2017年11月04日 15:21</p>
+        <p>原始链接： <a class="post-url" href="/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/" title="Spring-Cloud学习之路-Eureka服务注册">http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/</a></p>
+        <footer>
+            <a href="http://wangkaiping.github.io">
+                <img src="/images/logo.png" alt="程序猿Jedi">
+                程序猿Jedi
+            </a>
+        </footer>
+    </div>
+</div>
+
+      
+
+      
+        <div class="page-reward">
+          <p><a href="javascript:void(0)" onclick="dashangToggle()" class="dashang">赏</a></p>
+          <div class="hide_box"></div>
+          <div class="shang_box">
+            <a class="shang_close" href="javascript:void(0)" onclick="dashangToggle()">×</a>
+            <div class="shang_tit">
+              <p>扫码打赏，你说多少就多少</p>
+            </div>
+            <div class="shang_payimg">
+              <img src="/img/alipayimg.jpg" alt="扫码支持" title="扫一扫" />
+            </div>
+              <div class="pay_explain">坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+            <div class="shang_payselect">
+              
+                <div class="pay_item checked" data-id="alipay">
+                  <span class="radiobox"></span>
+                  <span class="pay_logo"><img src="/images/alipay.png" alt="支付宝" /></span>
+                </div>
+              
+              
+                <div class="pay_item" data-id="wechat">
+                  <span class="radiobox"></span>
+                  <span class="pay_logo"><img src="/images/weixin.png" alt="微信" /></span>
+                </div>
+              
+            </div>
+            <div class="shang_info">
+              <p>打开<span id="shang_pay_txt">支付宝</span>扫一扫，即可进行扫码打赏哦</p>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+        <script type="text/javascript">
+          $(".pay_item").click(function(){
+            $(this).addClass('checked').siblings('.pay_item').removeClass('checked');
+            var dataid=$(this).attr('data-id');
+            $(".shang_payimg img").attr("src","/img/"+dataid+"img.jpg");
+            $("#shang_pay_txt").text(dataid=="alipay"?"支付宝":"微信");
+          });
+          function dashangToggle(){
+            
+            $(".hide_box").fadeToggle();
+            $(".shang_box").fadeToggle();
+          }
+        </script>
+            
+
+    </div>
+    <footer class="article-footer">
+        
+        
+<div class="post-share">
+    <a href="javascript:;" id="share-sub" class="post-share-fab">
+        <i class="fa fa-share-alt"></i>
+    </a>
+    <div class="post-share-list" id="share-list">
+        <ul class="share-icons">
+          <li>
+            <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/&title=《Spring-Cloud学习之路-Eureka服务注册》 — Jedi's Blog&pic=http://wangkaiping.github.ioimages/logo.png" data-title="微博">
+              <i class="fa fa-weibo"></i>
+            </a>
+          </li>
+          <li>
+            <a class="weixin share-sns" id="wxFab" href="javascript:;" data-title="微信">
+              <i class="fa fa-weixin"></i>
+            </a>
+          </li>
+          <li>
+            <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/&title=《Spring-Cloud学习之路-Eureka服务注册》 — Jedi's Blog&source=专注 Java 开发的技术博客" data-title="QQ">
+              <i class="fa fa-qq"></i>
+            </a>
+          </li>
+          <li>
+            <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/" data-title="Facebook">
+              <i class="fa fa-facebook"></i>
+            </a>
+          </li>
+          <li>
+            <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Spring-Cloud学习之路-Eureka服务注册》 — Jedi's Blog&url=http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/&via=http://wangkaiping.github.io" data-title="Twitter">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+          <li>
+            <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/" data-title="Google+">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        </ul>
+     </div>
+</div>
+<div class="post-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;" id="wxShare-close">×</a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://wangkaiping.github.io/2017/08/07/Spring-Cloud学习之路-Eureka服务注册/" alt="微信分享二维码">
+</div>
+
+<div class="mask"></div>
+
+        
+        <ul class="article-footer-menu">
+            
+            
+  <li class="article-footer-tags">
+    <i class="fa fa-tags"></i>
+      
+    <a href="/tags/Spring/" class="color2">Spring</a>
+      
+  </li>
+
+        </ul>
+        
+    </footer>
+  </div>
+</article>
+
+
+
+<nav id="article-nav">
+  
+    <a href="/2017/08/07/Spring-Cloud学习之路-简单的Eureka/" id="article-nav-newer" class="article-nav-link-wrap">
+
+      <span class="article-nav-title">
+        <i class="fa fa-hand-o-left" aria-hidden="true"></i>
+        
+          Spring-Cloud学习之路-简单的Eureka
+        
+      </span>
+    </a>
+  
+  
+    <a href="/2017/08/07/Spring-Cloud学习之路-版本说明/" id="article-nav-older" class="article-nav-link-wrap">
+      <span class="article-nav-title">Spring-Cloud学习之路-版本说明</span>
+      <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+    </a>
+  
+</nav>
+
+
+
+    
+          <div id="uyan_frame"></div>
+  <script src="http://v2.uyan.cc/code/uyan.js?uid=2148050"></script>
+
+    
+</section>
+        
+      </div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+      <p>
+      &copy; 2017 程序猿Jedi<br>
+      </p>
+    </div>
+  </div>
+</footer>
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script>
+  var mihoConfig = {
+      root: "http://wangkaiping.github.io",
+      animate: true,
+      isHome: false,
+      share: true
+  }
+</script>
+<div class="sidebar">
+    <div id="sidebar-search" title="Search">
+        <i class="fa fa-search"></i>
+    </div>
+    <div id="sidebar-category" title="Categories">
+        <i class="fa fa-book"></i>
+    </div>
+    <div id="sidebar-tag" title="Tags">
+        <i class="fa fa-tags"></i>
+    </div>
+    <div id="sidebar-top">
+        <span class="sidebar-top-icon"><i class="fa fa-angle-up"></i></span>
+    </div>
+</div>
+<div class="sidebar-menu-box" id="sidebar-menu-box">
+    <div class="sidebar-menu-box-container">
+        <div id="sidebar-menu-box-categories">
+            <a class="category-link" href="/categories/Spring-Cloud/">Spring-Cloud</a><a class="category-link" href="/categories/前端/">前端</a>
+        </div>
+        <div id="sidebar-menu-box-tags">
+            <a href="/tags/Spring/" style="font-size: 20px;">Spring</a> <a href="/tags/plupload/" style="font-size: 10px;">plupload</a>
+        </div>
+    </div>
+    <a href="javascript:;" class="sidebar-menu-box-close">&times;</a>
+</div>
+<div class="mobile-header-menu-nav" id="mobile-header-menu-nav">
+    <div class="mobile-header-menu-container">
+        <span class="title">Menus</span>
+        <ul class="mobile-header-menu-navbar">
+            
+            <li>
+                <a  href="/">
+                    <i class="fa fa-home"></i><span>Home</span>
+                </a>
+            </li>
+            
+            <li>
+                <a  href="/archives">
+                    <i class="fa fa-archive"></i><span>Archives</span>
+                </a>
+            </li>
+            
+            <li>
+                <a  href="/about">
+                    <i class="fa fa-user"></i><span>About</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    <div class="mobile-header-tag-container">
+        <span class="title">Tags</span>
+        <div id="mobile-header-container-tags">
+            <a href="/tags/Spring/" style="font-size: 20px;">Spring</a> <a href="/tags/plupload/" style="font-size: 10px;">plupload</a>
+        </div>
+    </div>
+</div>
+<div class="search-wrap">
+    <span class="search-close">&times;</span>
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+            <i class="icon icon-lg icon-chevron-left"></i>
+        </a>
+        <input class="search-field" placeholder="Search..." id="keywords">
+        <a id="search-submit" href="javascript:;">
+            <i class="fa fa-search"></i>
+        </a>
+    <div class="search-container" id="search-container">
+        <ul class="search-result" id="search-result">
+        </ul>
+    </div>
+</div>
+
+<div id="search-tpl">
+    <li class="search-result-item">
+        <a href="{url}" class="search-item-li">
+            <span class="search-item-li-title" title="{title}">{title}</span>
+        </a>
+    </li>
+</div>
+<script src="/js/search.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="//cdn.bootcss.com/particles.js/2.0.0/particles.min.js"></script>
+  <div id="particles"></div>
+  <script src="/js/particles.js"></script>
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+  <script src="//cdn.bootcss.com/scrollReveal.js/3.0.5/scrollreveal.js"></script>
+  <script src="/js/animate.js"></script>
+
+  </div>
+</body>
+</html>
