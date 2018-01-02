@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="Jedi&#39;s Blog">
 <meta property="og:description" content="1、tinyint类型取值在数据库存储数据时，为了使数据在储存中占用更少的空间，也为了优化查询速度，我们可能在某些字段上需要设置它的类型为tinyint， 例如：某商品的状态储存、某用户的注册证件类型等等。  使用tinyint类型在判断或者存入数据到DB的时候没有问题，但是在读取数据的到实体类的时候 如果数据库里表中字段类型为tinyint，值是1，则使用mybatis查出来会显示为true；如">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2017-12-22T05:49:01.060Z">
+<meta property="og:updated_time" content="2018-01-02T09:01:45.887Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mybatis踩过的坑">
 <meta name="twitter:description" content="1、tinyint类型取值在数据库存储数据时，为了使数据在储存中占用更少的空间，也为了优化查询速度，我们可能在某些字段上需要设置它的类型为tinyint， 例如：某商品的状态储存、某用户的注册证件类型等等。  使用tinyint类型在判断或者存入数据到DB的时候没有问题，但是在读取数据的到实体类的时候 如果数据库里表中字段类型为tinyint，值是1，则使用mybatis查出来会显示为true；如">
@@ -179,10 +179,48 @@ takeWay == ‘1’ 处出错，导致不执行if判断中的sql，运行程序�
 </code></pre><blockquote>
 <p>解决办法：<br>把<code>&lt;if test=&quot;takeWay == &#39;1&#39; and workday != null &quot;&gt;</code><br>改为<code>&lt;if test=&#39;takeWay == &quot;1&quot; and workday != null &#39;&gt;</code><br>或改为<code>&lt;if test=&quot;takeWay == &#39;1&#39;.toString() and workday != null &quot;&gt;</code>即可</p>
 </blockquote>
+<h3 id="3、Mybatis单个参数的if判断（针对异常：There-is-no-getter-for-property-）"><a href="#3、Mybatis单个参数的if判断（针对异常：There-is-no-getter-for-property-）" class="headerlink" title="3、Mybatis单个参数的if判断（针对异常：There is no getter for property..）"></a>3、Mybatis单个参数的if判断（针对异常：There is no getter for property..）</h3><pre><code>在项目中，我们经常会根据主键或者某个特定的条件筛选得到我们需要的结果列表，使用mybatis，常使用&lt;where&gt;&lt;if test=&quot;&quot;&gt;&lt;/if&gt;&lt;/where&gt;
+这样的判断语句查询，比如下面这条常规语句：
+&lt;select id=&quot;queryBannerList&quot; parameterType=&quot;com.rsr.mall.admin.po.AdminBannerPo&quot; resultType=&quot;com.rsr.mall.admin.domain.Banner&quot;&gt;
+       select *
+        from rsr_mall_banner mb 
+        &lt;where&gt;
+            &lt;if test=&quot;queryTermCode!=null and queryTermCode!=&apos;&apos;&quot;&gt;
+               and mb.term_code = #{queryTermCode}
+            &lt;/if&gt;
+            &lt;if test=&quot;status &gt; 0&quot;&gt;
+               and mb.status = #{status}
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by record_id
+&lt;/select&gt;
+但是单个参数和多参数的判断有个不同点，当我们的入参为entity实体，或者map的时候，使用if 参数判断没任何问题。
+但是当我们的入参为java.lang.Integer  或者 java.lang.String的时候，如下：
+ &lt;select id=&quot;queryTermByCode&quot; parameterType=&quot;int&quot; resultType=&quot;com.rsr.mall.admin.dto.AppTerm&quot;&gt;
+    SELECT
+    code AS termCode,
+    app_name AS termName
+    FROM
+    cp_app_terminal
+    &lt;where&gt;
+    &lt;if test=&quot;code != null and code &gt; 0&quot;&gt;
+        AND code = #{code}
+    &lt;/if&gt;
+        AND `status` = 1
+    &lt;/where&gt;
+    GROUP BY company_code
+&lt;/select&gt;
+系统总是会抛出：
+Internal error : nested exception is org.apache.ibatis.reflection.ReflectionException: 
+There is no getter for property named &apos;code&apos; in &apos;class java.lang.Integer&apos;
+</code></pre><p>错误原因：参照<a href="http://blog.csdn.net/luanlouis/article/details/40422941" title="深入理解mybatis原理" target="_blank" rel="external">http://blog.csdn.net/luanlouis/article/details/40422941</a>。</p>
+<blockquote>
+<p>解决办法：<br>把<code>&lt;if test=&quot;code != null and code &gt; 0&quot;&gt;</code><br>改为<code>&lt;if test=&quot;_parameter != null and _parameter &gt; 0&quot;&gt;</code>即可，且最好追加<code>jdbcType</code>，指定映射类型</p>
+</blockquote>
 
             <div class="post-copyright">
     <div class="content">
-        <p>最后更新： 2017年12月22日 13:49</p>
+        <p>最后更新： 2018年01月02日 17:01</p>
         <p>原始链接： <a class="post-url" href="/2017/12/20/mybatis踩过的坑/" title="mybatis踩过的坑">http://wangkaiping.github.io/2017/12/20/mybatis踩过的坑/</a></p>
         <footer>
             <a href="http://wangkaiping.github.io">
@@ -314,7 +352,7 @@ takeWay == ‘1’ 处出错，导致不执行if判断中的sql，运行程序�
 
     <aside class="post-toc-pos post-toc-top" id="post-toc">
         <nav class="post-toc-wrap">
-            <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1、tinyint类型取值"><span class="post-toc-text">1、tinyint类型取值</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2、if-test判断"><span class="post-toc-text">2、if test判断</span></a></li></ol>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1、tinyint类型取值"><span class="post-toc-text">1、tinyint类型取值</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2、if-test判断"><span class="post-toc-text">2、if test判断</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#3、Mybatis单个参数的if判断（针对异常：There-is-no-getter-for-property-）"><span class="post-toc-text">3、Mybatis单个参数的if判断（针对异常：There is no getter for property..）</span></a></li></ol>
         </nav>
     </aside>
     
@@ -354,7 +392,7 @@ takeWay == ‘1’ 处出错，导致不执行if判断中的sql，运行程序�
 
 
       <p>
-      &copy; 2017 程序猿Jedi<br>
+      &copy; 2018 程序猿Jedi<br>
       </p>
     </div>
   </div>
